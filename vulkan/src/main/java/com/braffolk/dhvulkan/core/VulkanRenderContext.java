@@ -12,7 +12,6 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
-import com.seibel.distanthorizons.core.render.glObject.GLProxy;
 import com.seibel.distanthorizons.core.util.math.Mat4f;
 import com.seibel.distanthorizons.core.util.math.Vec3f;
 import net.vulkanmod.vulkan.Drawer;
@@ -125,11 +124,11 @@ public class VulkanRenderContext {
     private static final VertexFormat DH_TERRAIN_FORMAT;
     static {
         VertexFormatElement position = Compat.vertexFormatElement(0, 0,
-                VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.POSITION, 4);
+                VertexFormatElement.ComponentType.SHORT, VertexFormatElement.Type.POSITION, 4);
         VertexFormatElement color = Compat.vertexFormatElement(1, 0,
-                VertexFormatElement.Type.UBYTE, VertexFormatElement.Usage.COLOR, 4);
+                VertexFormatElement.ComponentType.UBYTE, VertexFormatElement.Type.COLOR, 4);
         VertexFormatElement material = Compat.vertexFormatElement(2, 0,
-                VertexFormatElement.Type.INT, VertexFormatElement.Usage.GENERIC, 1);
+                VertexFormatElement.ComponentType.INT, VertexFormatElement.Type.GENERIC, 1);
 
         DH_TERRAIN_FORMAT = Compat.buildVertexFormat(
                 new String[] { "Position", "Color", "Material" },

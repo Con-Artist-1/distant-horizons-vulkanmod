@@ -232,13 +232,18 @@ public final class Compat {
     // VertexFormatElement //
     // ========================= //
 
+    #if MC_VER >= MC_1_21_1
+    public static VertexFormatElement vertexFormatElement(
+            int id, int index,
+            VertexFormatElement.ComponentType type, VertexFormatElement.Type usage,
+            int count) {
+        return new VertexFormatElement(id, index, type, usage, count);
+    }
+    #else
     public static VertexFormatElement vertexFormatElement(
             int id, int index,
             VertexFormatElement.Type type, VertexFormatElement.Usage usage,
             int count) {
-        #if MC_VER >= MC_1_21_1
-        return new VertexFormatElement(id, index, type, usage, count);
-        #else
         // MC 1.20: VertexFormatElement(id, Type, Usage, count)
         // Non-UV usages MUST have id=0 (MC validates this at construction).
         // CRITICAL: Do NOT remap GENERIC→UV! VulkanMod's UV handler doesn't
@@ -248,8 +253,8 @@ public final class Compat {
             return new VertexFormatElement(id, type, usage, count);
         }
         return new VertexFormatElement(0, type, usage, count);
-        #endif
     }
+    #endif
 
     // ========================= //
     // VertexFormat builder //

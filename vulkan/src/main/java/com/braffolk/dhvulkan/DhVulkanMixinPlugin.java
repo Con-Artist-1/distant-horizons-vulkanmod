@@ -160,14 +160,10 @@ public class DhVulkanMixinPlugin implements IMixinConfigPlugin {
                 System.out.println("[DH-VulkanMod] DH 3.0 detected. Using API integration + dh3 mixins.");
             } catch (ClassNotFoundException e) {
                 isDh3Present = false;
-                System.out.println("[DH-VulkanMod] DH 2.4 detected. Using mixin integration + dh24 mixins.");
+                throw new RuntimeException("[DH-VulkanMod] Distant Horizons version 3.0+ is required but not found!");
             }
         }
 
-        // dh24 mixins: only for DH 2.4
-        if (mixinClassName.contains(".dh24.") && isDh3Present) {
-            return false;
-        }
         // dh3 mixins: only for DH 3.0
         if (mixinClassName.contains(".dh3.") && !isDh3Present) {
             return false;

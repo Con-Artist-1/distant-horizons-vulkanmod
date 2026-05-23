@@ -5,7 +5,6 @@ import com.braffolk.dhvulkan.bridge.DhVersionDetector;
 import com.braffolk.dhvulkan.config.DhVulkanConfig;
 import com.braffolk.dhvulkan.core.VulkanBackend;
 import com.braffolk.dhvulkan.core.VulkanRenderEngine;
-import com.braffolk.dhvulkan.dh24.Dh24Integration;
 import com.braffolk.dhvulkan.compat.Compat;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.fabricmc.api.ClientModInitializer;
@@ -73,31 +72,17 @@ public class DhVulkanModEntrypoint implements ClientModInitializer {
         DhVersionDetector.DhVersion dhVersion = DhVersionDetector.detect();
         LOGGER.info("[DH-VulkanMod] Detected DH version: {}", dhVersion);
 
-        switch (dhVersion) {
-            case DH_3_0:
-                com.braffolk.dhvulkan.api.ApiDhIntegration apiIntegration = new com.braffolk.dhvulkan.api.ApiDhIntegration();
-                apiIntegration.initialize(backend);
-                activeIntegration = apiIntegration;
-                break;
-            case DH_2_4:
-            default:
-                activeIntegration = new Dh24Integration();
-                activeIntegration.initialize(backend);
-                break;
+        if (dhVersion == DhVersionDetector.DhVersion.DH_3_0) {
+            com.braffolk.dhvulkan.api.ApiDhIntegration apiIntegration = new com.braffolk.dhvulkan.api.ApiDhIntegration();
+            apiIntegration.initialize(backend);
+            activeIntegration = apiIntegration;
+        } else {
+            LOGGER.error("[DH-VulkanMod] Distant Horizons version 3.0+ is required but not found. Extension will be inactive.");
         }
 
         LOGGER.info("[DH-VulkanMod] Using integration: {}", activeIntegration.getName());
     }
 
-    /**
-     * Called from MixinLodRenderer before the first render pass to wire the
-     * delegate. Only applies to DH 2.4 path.
-     */
-    public static void wireIfNeeded() {
-        if (activeIntegration instanceof Dh24Integration) {
-            ((Dh24Integration) activeIntegration).wireIfNeeded();
-        }
-    }
 
     /** Get the active integration (for mixins that need it) */
     public static DhIntegration getActiveIntegration() {

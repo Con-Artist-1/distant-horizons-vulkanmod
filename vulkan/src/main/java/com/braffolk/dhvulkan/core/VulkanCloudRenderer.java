@@ -167,7 +167,7 @@ public class VulkanCloudRenderer {
         else
             yState = Y_INSIDE_CLOUDS;
 
-        CloudStatus cloudsType = mc.options.getCloudsType();
+        CloudStatus cloudsType = mc.options.clouds().get();
 
         // Rebuild mesh when camera cell changes
         if (centerCellX != this.prevCloudX || centerCellZ != this.prevCloudZ
