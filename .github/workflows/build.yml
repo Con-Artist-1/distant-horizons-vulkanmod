@@ -1,0 +1,87 @@
+name: Build Mod
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      mcVer:
+        description: 'Minecraft Version to build'
+        required: true
+        default: '26.1.2'
+        type: string
+      dhUrl:
+        description: 'Direct URL to Distant Horizons jar (optional)'
+        required: false
+        type: string
+      vmUrl:
+        description: 'Direct URL to VulkanMod jar (optional)'
+        required: false
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Setup Java JDK 25
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '25'
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Determine Minecraft Version
+      id: get_version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "MC_VER=${{ github.event.inputs.mcVer }}" >> $GITHUB_ENV
+        else
+          # Parse settings.gradle to extract defaultMcVersion
+          MC_VER=$(grep -oP 'defaultMcVersion\s*=\s*"\K[^"]+' settings.gradle)
+          echo "MC_VER=$MC_VER" >> $GITHUB_ENV
+        fi
+
+    - name: Download Dependency Jars
+      env:
+        DH_URL: ${{ github.event.inputs.dhUrl }}
+        VM_URL: ${{ github.event.inputs.vmUrl }}
+      run: |
+        python .github/workflows/scripts/download_dependencies.py "$MC_VER"
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Build Mod with Gradle
+      env:
+        MC_VER: ${{ env.MC_VER }}
+      run: |
+        chmod +x gradlew
+        ./gradlew clean :vulkan:build -PmcVer="$MC_VER" -PinfoGitCommit="${{ github.sha }}" -PinfoGitBranch="${{ github.ref_name }}" -PinfoBuildSource="GitHub Actions (${{ github.run_id }})"
+
+    - name: Merge Jars (Optional)
+      env:
+        MC_VER: ${{ env.MC_VER }}
+      run: |
+        ./gradlew mergeJars -PmcVer="$MC_VER" -PinfoGitCommit="${{ github.sha }}" -PinfoGitBranch="${{ github.ref_name }}" -PinfoBuildSource="GitHub Actions (${{ github.run_id }})" || echo "mergeJars not supported or failed"
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: DistantHorizons-VulkanMod-${{ env.MC_VER }}
+        path: |
+          vulkan/build/libs/*.jar
+          build/merged/*.jar
+          buildAllJars/*.jar
