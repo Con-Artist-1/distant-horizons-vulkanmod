@@ -771,12 +771,9 @@ public class VulkanRenderEngine implements VulkanBackend {
         Config.Client.Advanced.Debugging.DebugWireframe.showWorldGenQueue.setApiValue(false);
         Config.Client.Advanced.Debugging.DebugWireframe.showNetworkSyncOnLoadQueue.setApiValue(false);
         Config.Client.Advanced.Debugging.DebugWireframe.showRenderSectionStatus.setApiValue(false);
-        Config.Client.Advanced.Debugging.DebugWireframe.showRenderSectionToggling.setApiValue(false);
         Config.Client.Advanced.Debugging.DebugWireframe.showQuadTreeRenderStatus.setApiValue(false);
         Config.Client.Advanced.Debugging.DebugWireframe.showFullDataUpdateStatus.setApiValue(false);
 
-        Config.Client.Advanced.Graphics.GenericRendering.enableInstancedRendering
-                .setAppearance(EConfigEntryAppearance.ONLY_IN_FILE);
         Config.Client.Advanced.Graphics.Fog.enableVanillaFog
                 .setAppearance(EConfigEntryAppearance.ONLY_IN_FILE);
         Config.Client.Advanced.Debugging.OpenGl.overrideVanillaGLLogger
@@ -784,8 +781,6 @@ public class VulkanRenderEngine implements VulkanBackend {
         Config.Client.Advanced.Debugging.OpenGl.onlyLogGlErrorsOnce
                 .setAppearance(EConfigEntryAppearance.ONLY_IN_FILE);
         Config.Client.Advanced.Debugging.OpenGl.glErrorHandlingMode
-                .setAppearance(EConfigEntryAppearance.ONLY_IN_FILE);
-        Config.Client.Advanced.Debugging.OpenGl.glUploadMode
                 .setAppearance(EConfigEntryAppearance.ONLY_IN_FILE);
     }
 }

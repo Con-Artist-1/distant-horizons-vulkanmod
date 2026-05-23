@@ -361,7 +361,7 @@ public final class Compat {
         net.vulkanmod.vulkan.shader.layout.Uniform.Info info =
                 net.vulkanmod.vulkan.shader.layout.Uniform.createUniformInfo(type, name, count);
         info.setBufferSupplier(bufferSupplier);
-        builder.addUniformInfo(info);
+        builder.addUniform(info);
         #else
         builder.addUniformInfo(type, name, count);
         #endif
@@ -403,15 +403,24 @@ public final class Compat {
         net.vulkanmod.vulkan.shader.layout.Uniform.Info info =
                 net.vulkanmod.vulkan.shader.layout.Uniform.createUniformInfo(type, name, count);
         info.setBufferSupplier(bufferSupplier);
-        pcBuilder.addUniformInfo(info);
+        pcBuilder.addUniform(info);
         try {
             java.lang.reflect.Field pcField =
                     net.vulkanmod.vulkan.shader.Pipeline.Builder.class.getDeclaredField("pushConstants");
             pcField.setAccessible(true);
-            pcField.set(pipelineBuilder, pcBuilder.buildPushConstant());
+            pcField.set(pipelineBuilder, pcBuilder.buildPushConstant(1));
         } catch (Exception e) {
             throw new RuntimeException("[DH-Vulkan] Failed to set push constants on pipeline builder", e);
         }
+        #endif
+    }
+
+    public static void compileShaders(net.vulkanmod.vulkan.shader.Pipeline.Builder builder, String name, String vertSource, String fragSource) {
+        #if MC_VER >= MC_1_21_1
+        builder.setShaderSrc(net.vulkanmod.vulkan.shader.SPIRVUtils.ShaderKind.VERTEX_SHADER, vertSource);
+        builder.setShaderSrc(net.vulkanmod.vulkan.shader.SPIRVUtils.ShaderKind.FRAGMENT_SHADER, fragSource);
+        #else
+        builder.compileShaders(name, vertSource, fragSource);
         #endif
     }
 
@@ -455,7 +464,7 @@ public final class Compat {
         try {
             #if MC_VER >= MC_1_21_1
             var lightmapView = net.minecraft.client.Minecraft.getInstance()
-                    .gameRenderer.lightTexture().getTextureView();
+                    .gameRenderer.lightTexture.getTextureView();
             if (lightmapView == null) return null;
             com.mojang.blaze3d.opengl.GlTexture glTex =
                     (com.mojang.blaze3d.opengl.GlTexture) lightmapView.texture();
