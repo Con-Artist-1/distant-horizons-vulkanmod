@@ -1,23 +1,11 @@
 plugins {
-    id "dev.architectury.loom" version "1.13-SNAPSHOT" apply false
-    id "net.fabricmc.fabric-loom" version "1.16.2" apply false
+    id "net.fabricmc.fabric-loom" version "1.16.2"
     id "systems.manifold.manifold-gradle-plugin" version "0.0.2-alpha"
-}
-
-// Determine if this MC version is unobfuscated (26.x+)
-def mcVer = rootProject.minecraft_version
-def isUnobfuscated = !mcVer.startsWith("1.")
-
-// Apply the correct Loom plugin based on MC version
-if (isUnobfuscated) {
-    apply plugin: "net.fabricmc.fabric-loom"
-} else {
-    apply plugin: "dev.architectury.loom"
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(rootProject.java_version as int)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -30,22 +18,12 @@ jar {
     archiveFileName = "DistantHorizons-VulkanMod-fabric-${version}-mc${rootProject.minecraft_version}.jar"
 }
 
-if (!isUnobfuscated) {
-    // Old obfuscated versions need remapping
-    remapJar {
-        inputFile = jar.archiveFile
-        archiveFileName = "DistantHorizons-VulkanMod-fabric-${version}-mc${rootProject.minecraft_version}.jar"
-        dependsOn jar
-    }
-}
-
 processResources {
-    def vmMinVersion = rootProject.minecraft_version.startsWith("1.20") ? ">=0.4.2" : ">=0.6.0"
     inputs.property "version", project.version
     inputs.property "minecraft_version", rootProject.minecraft_version
-    inputs.property "vulkanmod_min_version", vmMinVersion
+    inputs.property "vulkanmod_min_version", ">=0.6.0"
     filesMatching("fabric.mod.json") {
-        expand "version": project.version, "minecraft_version": rootProject.minecraft_version, "vulkanmod_min_version": vmMinVersion
+        expand "version": project.version, "minecraft_version": rootProject.minecraft_version, "vulkanmod_min_version": ">=0.6.0"
     }
 }
 
@@ -55,6 +33,7 @@ manifold {
 }
 
 // Resolve DH and VulkanMod jars dynamically based on MC version
+def mcVer = rootProject.minecraft_version
 def dhJar = fileTree("${rootDir}/jars").matching { include "DistantHorizons-*-${mcVer}-*.jar" }.files
 def vmJar = fileTree("${rootDir}/jars").matching { include "VulkanMod_${mcVer}-*.jar" }.files
 
@@ -64,33 +43,15 @@ if (vmJar.isEmpty()) throw new GradleException("No VulkanMod jar found for MC ${
 dependencies {
     minecraft "com.mojang:minecraft:${mcVer}"
 
-    if (!isUnobfuscated) {
-        // Obfuscated versions need mappings
-        mappings loom.layered() {
-            officialMojangMappings()
-            parchment("org.parchmentmc.data:parchment-${rootProject.parchment_version}@zip")
-        }
-        // Fabric loader + API (mod-aware for remapping)
-        modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-        modImplementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+    // MC 26.x is unobfuscated — use Fabric loader + API directly
+    implementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
 
-        // Distant Horizons — compile against all matched jars
-        dhJar.each { modCompileOnly files(it) }
+    // Distant Horizons — compile against all matched jars
+    dhJar.each { compileOnly files(it) }
 
-        // VulkanMod — compile against the jar
-        modCompileOnly files(vmJar.first())
-    } else {
-        // Unobfuscated versions (26.x+) — no mappings exist, game ships unobfuscated
-        mappings loom.noMappings()
-        implementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-        implementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
-
-        // Distant Horizons — compile against all matched jars
-        dhJar.each { compileOnly files(it) }
-
-        // VulkanMod — compile against the jar
-        compileOnly files(vmJar.first())
-    }
+    // VulkanMod — compile against the jar
+    compileOnly files(vmJar.first())
 
     // LWJGL vulkan types (VkCommandBuffer, MemoryStack) surfaced by VulkanMod's API
     compileOnly "org.lwjgl:lwjgl:${rootProject.lwjgl_version}"
