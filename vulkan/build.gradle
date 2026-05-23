@@ -10,10 +10,12 @@ java {
 }
 
 version = rootProject.mod_version
-archivesBaseName = "DistantHorizons-VulkanMod-fabric"
+base {
+    archivesName = "DistantHorizons-VulkanMod-fabric"
+}
 
 jar {
-    archiveFileName = "${archivesBaseName}-${version}-mc${rootProject.minecraft_version}.jar"
+    archiveFileName = "DistantHorizons-VulkanMod-fabric-${version}-mc${rootProject.minecraft_version}.jar"
 }
 
 remapJar {
