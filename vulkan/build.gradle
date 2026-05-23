@@ -1,15 +1,15 @@
-// Determine if this MC version is unobfuscated (26.x+)
-def mcVer = rootProject.minecraft_version
-def isUnobfuscated = !mcVer.startsWith("1.")
-
 plugins {
     id "dev.architectury.loom" version "1.13-SNAPSHOT" apply false
     id "net.fabricmc.fabric-loom" version "1.16.2" apply false
     id "systems.manifold.manifold-gradle-plugin" version "0.0.2-alpha"
 }
 
+// Determine if this MC version is unobfuscated (26.x+)
+def mcVer = rootProject.minecraft_version
+def isUnobfuscated = !mcVer.startsWith("1.")
+
 // Apply the correct Loom plugin based on MC version
-if (!rootProject.minecraft_version.startsWith("1.")) {
+if (isUnobfuscated) {
     apply plugin: "net.fabricmc.fabric-loom"
 } else {
     apply plugin: "dev.architectury.loom"
@@ -30,7 +30,7 @@ jar {
     archiveFileName = "DistantHorizons-VulkanMod-fabric-${version}-mc${rootProject.minecraft_version}.jar"
 }
 
-if (rootProject.minecraft_version.startsWith("1.")) {
+if (!isUnobfuscated) {
     // Old obfuscated versions need remapping
     remapJar {
         inputFile = jar.archiveFile
@@ -64,7 +64,7 @@ if (vmJar.isEmpty()) throw new GradleException("No VulkanMod jar found for MC ${
 dependencies {
     minecraft "com.mojang:minecraft:${mcVer}"
 
-    if (rootProject.minecraft_version.startsWith("1.")) {
+    if (!isUnobfuscated) {
         // Obfuscated versions need mappings
         mappings loom.layered() {
             officialMojangMappings()
