@@ -1,7 +1,7 @@
 name: Build Mod
 
 permissions:
-  contents: read
+  contents: write
 
 on:
   push:
@@ -88,3 +88,20 @@ jobs:
           vulkan/build/libs/*.jar
           build/merged/*.jar
           buildAllJars/*.jar
+
+    - name: Parse Mod Version
+      run: |
+        MOD_VERSION=$(grep -oP '^mod_version\s*=\s*\K.+' gradle.properties | tr -d '\r')
+        echo "MOD_VERSION=$MOD_VERSION" >> $GITHUB_ENV
+
+    - name: Create GitHub Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: "v${{ env.MOD_VERSION }}-mc${{ env.MC_VER }}"
+        name: "Distant Horizons VulkanMod v${{ env.MOD_VERSION }} for MC ${{ env.MC_VER }}"
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+        files: |
+          vulkan/build/libs/*.jar
