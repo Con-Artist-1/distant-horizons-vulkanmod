@@ -80,7 +80,8 @@ dependencies {
         // VulkanMod — compile against the jar
         modCompileOnly files(vmJar.first())
     } else {
-        // Unobfuscated versions (26.x+) — no mappings, no remapping
+        // Unobfuscated versions (26.x+) — identity mappings, no remapping
+        mappings loom.officialMojangMappings()
         implementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
         implementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
 
