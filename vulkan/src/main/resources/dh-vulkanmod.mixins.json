@@ -1,7 +1,7 @@
 {
     "required": true,
     "package": "com.braffolk.dhvulkan.mixin",
-    "compatibilityLevel": "JAVA_21",
+    "compatibilityLevel": "JAVA_25",
     "plugin": "com.braffolk.dhvulkan.DhVulkanMixinPlugin",
     "client": [
         "dh24.MixinGLProxy",

@@ -3,8 +3,10 @@ package com.braffolk.dhvulkan.api;
 import com.braffolk.dhvulkan.core.VulkanBackend;
 import com.braffolk.dhvulkan.core.data.RenderUniforms;
 import com.braffolk.dhvulkan.core.data.VkVertexData;
+import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingApi;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderableBoxGroup;
 import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBufferContainer;
+import com.seibel.distanthorizons.core.render.EDhRenderDepth;
 import com.seibel.distanthorizons.core.render.RenderParams;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
 import com.seibel.distanthorizons.core.util.math.Vec3f;
@@ -52,6 +54,10 @@ public class VkRenderApiDefinition extends AbstractDhRenderApiDefinition {
     }
 
     @Override public String getApiName() { return "VulkanMod"; }
+    @Override public EDhRenderDepth getRenderDepth() { return EDhRenderDepth.FORWARD_Z; }
+    @Override public EDhApiRenderingApi getRenderApi() { return EDhApiRenderingApi.VULKAN; }
+    /** VulkanMod calls raw Vulkan API, not Blaze3D. */
+    @Override public boolean isNativeRenderer() { return true; }
 
     // Singletons
     @Override public IDhMetaRenderer getMetaRenderer() { return metaRenderer; }

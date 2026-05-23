@@ -13,7 +13,7 @@ pluginManagement {
 
 /** Loads version properties for the selected Minecraft version. */
 def loadProperties() {
-    def defaultMcVersion = "1.21.11"
+    def defaultMcVersion = "26.1.2"
     def mcVersion = ""
     def mcVers = fileTree("versionProperties").files.name
     for (int i = 0; i < mcVers.size(); i++) {
