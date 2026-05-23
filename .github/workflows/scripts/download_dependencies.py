@@ -62,7 +62,7 @@ def main():
         print("Using provided DH direct URL.")
         download_file(dh_url, jars_dir / f"DistantHorizons-custom-{mc_ver}-fabric.jar")
     else:
-        url = get_modrinth_jar("distant-horizons", mc_ver)
+        url = get_modrinth_jar("distanthorizons", mc_ver)
         if url:
             filename = f"DistantHorizons-modrinth-{mc_ver}-fabric.jar"
             download_file(url, jars_dir / filename)
