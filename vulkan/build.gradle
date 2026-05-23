@@ -42,7 +42,7 @@ if (vmJar.isEmpty()) throw new GradleException("No VulkanMod jar found for MC ${
 
 dependencies {
     minecraft "com.mojang:minecraft:${mcVer}"
-    mappings files("empty.tiny")
+    mappings fileTree(dir: "mappings", include: "empty.tiny")
 
     // MC 26.x is unobfuscated — use Fabric loader + API directly
     modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
