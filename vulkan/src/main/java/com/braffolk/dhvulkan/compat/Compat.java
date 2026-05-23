@@ -232,23 +232,54 @@ public final class Compat {
     // VertexFormatElement //
     // ========================= //
 
-    #if MC_VER >= MC_1_21_1
+    #if MC_VER >= MC_26_1_2
+    public static final class ElementType {
+        public static final VertexFormatElement.Type FLOAT = VertexFormatElement.Type.FLOAT;
+        public static final VertexFormatElement.Type UBYTE = VertexFormatElement.Type.UBYTE;
+        public static final VertexFormatElement.Type SHORT = VertexFormatElement.Type.SHORT;
+        public static final VertexFormatElement.Type INT = VertexFormatElement.Type.INT;
+    }
+
     public static VertexFormatElement vertexFormatElement(
             int id, int index,
-            VertexFormatElement.ComponentType type, VertexFormatElement.Type usage,
+            VertexFormatElement.Type type, boolean normalized,
             int count) {
+        return new VertexFormatElement(id, index, type, normalized, count);
+    }
+    #elif MC_VER >= MC_1_21_1
+    public static final class ElementType {
+        public static final VertexFormatElement.ComponentType FLOAT = VertexFormatElement.ComponentType.FLOAT;
+        public static final VertexFormatElement.ComponentType UBYTE = VertexFormatElement.ComponentType.UBYTE;
+        public static final VertexFormatElement.ComponentType SHORT = VertexFormatElement.ComponentType.SHORT;
+        public static final VertexFormatElement.ComponentType INT = VertexFormatElement.ComponentType.INT;
+    }
+
+    public static VertexFormatElement vertexFormatElement(
+            int id, int index,
+            VertexFormatElement.ComponentType type, boolean normalized,
+            int count) {
+        VertexFormatElement.Type usage;
+        if (id == 0) usage = VertexFormatElement.Type.POSITION;
+        else if (id == 1) usage = VertexFormatElement.Type.COLOR;
+        else usage = VertexFormatElement.Type.GENERIC;
         return new VertexFormatElement(id, index, type, usage, count);
     }
     #else
+    public static final class ElementType {
+        public static final VertexFormatElement.Type FLOAT = VertexFormatElement.Type.FLOAT;
+        public static final VertexFormatElement.Type UBYTE = VertexFormatElement.Type.UBYTE;
+        public static final VertexFormatElement.Type SHORT = VertexFormatElement.Type.SHORT;
+        public static final VertexFormatElement.Type INT = VertexFormatElement.Type.INT;
+    }
+
     public static VertexFormatElement vertexFormatElement(
             int id, int index,
-            VertexFormatElement.Type type, VertexFormatElement.Usage usage,
+            VertexFormatElement.Type type, boolean normalized,
             int count) {
-        // MC 1.20: VertexFormatElement(id, Type, Usage, count)
-        // Non-UV usages MUST have id=0 (MC validates this at construction).
-        // CRITICAL: Do NOT remap GENERIC→UV! VulkanMod's UV handler doesn't
-        // support INT type, resulting in VK_FORMAT_UNDEFINED → DEVICE_LOST.
-        // GENERIC with id=0 is valid and VulkanMod maps INT→VK_FORMAT_R32_SINT.
+        VertexFormatElement.Usage usage;
+        if (id == 0) usage = VertexFormatElement.Usage.POSITION;
+        else if (id == 1) usage = VertexFormatElement.Usage.COLOR;
+        else usage = VertexFormatElement.Usage.GENERIC;
         if (usage == VertexFormatElement.Usage.UV) {
             return new VertexFormatElement(id, type, usage, count);
         }
@@ -462,6 +493,16 @@ public final class Compat {
 
     public static VulkanImage getLightmapVulkanImage() {
         try {
+            #if MC_VER >= MC_26_1_2
+            var lightmapView = net.minecraft.client.Minecraft.getInstance()
+                    .gameRenderer.levelLightmap();
+            if (lightmapView == null) return null;
+            com.mojang.blaze3d.opengl.GlTexture glTex =
+                    (com.mojang.blaze3d.opengl.GlTexture) lightmapView.texture();
+            net.vulkanmod.gl.VkGlTexture vkGlTex =
+                    net.vulkanmod.gl.VkGlTexture.getTexture(glTex.glId());
+            return vkGlTex != null ? vkGlTex.getVulkanImage() : null;
+            #else
             #if MC_VER >= MC_1_21_1
             var lightmapView = net.minecraft.client.Minecraft.getInstance()
                     .gameRenderer.lightTexture.getTextureView();
@@ -475,6 +516,7 @@ public final class Compat {
             // VM 0.4.2: MC already binds lightmap to slot 2 before our hook fires.
             // Just read it directly from VTextureSelector.
             return VTextureSelector.getBoundTexture(2);
+            #endif
             #endif
         } catch (Exception e) {
             return null;
@@ -1002,6 +1044,60 @@ public final class Compat {
 
     private static final com.seibel.distanthorizons.core.logging.DhLogger LOGGER = new com.seibel.distanthorizons.core.logging.DhLoggerBuilder()
             .build();
+
+    public static net.minecraft.client.CloudStatus getCloudsType(net.minecraft.client.Options options) {
+        #if MC_VER >= MC_26_1_2
+        return options.getCloudStatus();
+        #else
+        return options.clouds().get();
+        #endif
+    }
+
+    public static void registerClientCommands(String[] modeNames) {
+        #if MC_VER >= MC_26_1_2
+        net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            dispatcher.register(net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal("dh-debug")
+                    .executes(ctx -> {
+                        int mode = com.braffolk.dhvulkan.config.DhVulkanConfig.get().vulkanRenderMode;
+                        String name = mode >= 0 && mode < modeNames.length ? modeNames[mode] : "Unknown";
+                        ctx.getSource().sendFeedback(net.minecraft.network.chat.Component.literal(
+                                "\u00a7b[DH-Vulkan]\u00a7r Render mode: " + mode + " (" + name + ")"));
+                        return 1;
+                    })
+                    .then(net.fabricmc.fabric.api.client.command.v2.ClientCommands.argument("mode", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 6))
+                            .executes(ctx -> {
+                                int mode = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "mode");
+                                com.braffolk.dhvulkan.config.DhVulkanConfig.get().vulkanRenderMode = mode;
+                                com.braffolk.dhvulkan.config.DhVulkanConfig.get().save();
+                                String name = mode >= 0 && mode < modeNames.length ? modeNames[mode] : "Unknown";
+                                ctx.getSource().sendFeedback(net.minecraft.network.chat.Component.literal(
+                                        "\u00a7b[DH-Vulkan]\u00a7r Render mode set to: " + mode + " (" + name + ")"));
+                                return 1;
+                            })));
+        });
+        #else
+        net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            dispatcher.register(net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal("dh-debug")
+                    .executes(ctx -> {
+                        int mode = com.braffolk.dhvulkan.config.DhVulkanConfig.get().vulkanRenderMode;
+                        String name = mode >= 0 && mode < modeNames.length ? modeNames[mode] : "Unknown";
+                        ctx.getSource().sendFeedback(net.minecraft.network.chat.Component.literal(
+                                "\u00a7b[DH-Vulkan]\u00a7r Render mode: " + mode + " (" + name + ")"));
+                        return 1;
+                    })
+                    .then(net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument("mode", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 6))
+                            .executes(ctx -> {
+                                int mode = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "mode");
+                                com.braffolk.dhvulkan.config.DhVulkanConfig.get().vulkanRenderMode = mode;
+                                com.braffolk.dhvulkan.config.DhVulkanConfig.get().save();
+                                String name = mode >= 0 && mode < modeNames.length ? modeNames[mode] : "Unknown";
+                                ctx.getSource().sendFeedback(net.minecraft.network.chat.Component.literal(
+                                        "\u00a7b[DH-Vulkan]\u00a7r Render mode set to: " + mode + " (" + name + ")"));
+                                return 1;
+                            })));
+        });
+        #endif
+    }
 
     private Compat() {
     }

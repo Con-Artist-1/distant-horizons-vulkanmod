@@ -124,11 +124,11 @@ public class VulkanRenderContext {
     private static final VertexFormat DH_TERRAIN_FORMAT;
     static {
         VertexFormatElement position = Compat.vertexFormatElement(0, 0,
-                VertexFormatElement.ComponentType.SHORT, VertexFormatElement.Type.POSITION, 4);
+                Compat.ElementType.SHORT, false, 4);
         VertexFormatElement color = Compat.vertexFormatElement(1, 0,
-                VertexFormatElement.ComponentType.UBYTE, VertexFormatElement.Type.COLOR, 4);
+                Compat.ElementType.UBYTE, true, 4);
         VertexFormatElement material = Compat.vertexFormatElement(2, 0,
-                VertexFormatElement.ComponentType.INT, VertexFormatElement.Type.GENERIC, 1);
+                Compat.ElementType.INT, false, 1);
 
         DH_TERRAIN_FORMAT = Compat.buildVertexFormat(
                 new String[] { "Position", "Color", "Material" },

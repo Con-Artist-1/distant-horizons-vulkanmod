@@ -59,7 +59,7 @@ public class DhDepthReaderPipeline {
     private static final VertexFormat QUAD_FORMAT;
     static {
         VertexFormatElement position = Compat.vertexFormatElement(0, 0,
-                VertexFormatElement.ComponentType.FLOAT, VertexFormatElement.Type.POSITION, 2);
+                Compat.ElementType.FLOAT, false, 2);
         QUAD_FORMAT = Compat.buildVertexFormat(
                 new String[] { "Position" },
                 new VertexFormatElement[] { position });

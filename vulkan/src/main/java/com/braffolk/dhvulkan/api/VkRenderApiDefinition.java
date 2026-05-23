@@ -297,5 +297,10 @@ public class VkRenderApiDefinition extends AbstractDhRenderApiDefinition {
         public IDhApiRenderableBoxGroup remove(long id) {
             return null; // Not yet implemented
         }
+
+        @Override
+        public void close() {
+            // Not yet implemented
+        }
     }
 }
